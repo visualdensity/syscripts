@@ -1,0 +1,94 @@
+#! /bin/bash
+
+#=====================================================================
+#  Folders permission reset
+#
+#  This script is to ensure that all folders used for uploading images
+#  and various media assets are in its right mask to prevent permission
+#  issues.
+#
+#  Folders involved including cache folders, image & various asset
+#  folders as well as upload folders.
+#
+#  @author   Wee Keat <weekeat@visualdensity.com>
+#  @since    Nov 2010
+#=====================================================================
+
+
+if [[ $EUID -ne 0 ]];
+then
+    echo "Sorry, but this script needs to be run as root!"
+    exit 1
+fi
+
+unset VERBOSE
+
+parent_dir=/var/www/example.com/top/
+perm_owner=www-data
+perm_group=www-data
+
+sub_folders[0]=img/
+sub_folders[1]=images/
+sub_folders[2]=blog/wp-content/cache/
+sub_folders[3]=blog/wp-content/uploads/
+sub_folders[4]=imagesxtra/
+sub_folders[5]=uploads/
+sub_folders[6]=admin/images/
+
+usage() {
+    echo "Fixes permission on Rusty US site root."
+    echo "Current dir: $parent_dir"
+    echo
+    echo "Usage:"
+    echo "      $0 -v"
+    echo
+    echo "Options:"
+    echo "      -v for verbosity"
+    echo "      -h display this help message"
+    echo
+    echo "Note: Please edit parent_dir path in script."
+}
+
+while getopts "hv" opts
+do
+    case $opts in
+        h)
+            usage
+            exit 0
+            ;;
+        v)
+            VERBOSE=1
+    esac
+done
+
+tell() {
+    if [ -n "$1" ] && [ -n "$VERBOSE" ]
+    then
+        echo "$1"
+    fi
+}
+
+if [ -d "$parent_dir" ]
+then
+    cd "$parent_dir"
+    tell "Moved into `pwd`"
+else
+    echo "Directory $parent_dir doesn't exist"
+    exit 1
+fi
+
+for folder in ${sub_folders[@]};
+do
+    if [ -d "$folder" ]
+    then
+        chown -R "$perm_owner":"$perm_group" "$folder"
+        tell "Chwoned $perm_owner:$perm_group on $folder"
+
+        chmod -R g+rw "$folder"
+        tell "Chmodded g+rw on $folder"
+    else 
+        tell "Oops! Folder $folder does not exist. Skipping..."
+    fi
+done
+
+exit 0

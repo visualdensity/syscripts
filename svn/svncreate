@@ -1,0 +1,113 @@
+#! /bin/bash
+
+#=====================================================================
+#  Svnadmin Create Wrapper
+#
+#  This script is to ensure that all folders are set to correct
+#  permission after a new repository has been created. This script will
+#  also be used for setting up basic configs such as commit hooks etc
+#
+#  @author   Wee Keat <weekeat@scoopon.com.au>
+#  @since    Aug 2011
+#  @TODO     + summary of new repo
+#            + notification feature
+#            + dry run
+#=====================================================================
+
+if [[ $EUID -ne 0 ]];
+then
+    echo "Sorry, but this script needs to be run as root!"
+    exit 1
+fi
+
+unset VERBOSE
+
+svn_owner=apache
+svn_group=apache
+default_svn_path=/var/www/svn
+
+usage() {
+    echo "Svnadmin create wrapper - for setting perms and hooks."
+    echo "Usage:"
+    echo "      $0 -h"
+    echo
+    echo "Options:"
+    echo "      -v for verbosity"
+    echo "      -n repository name"
+    echo "      -p override full path to new repo"
+}
+
+tell() {
+    if [ -n "$1" ] && [ -n "$VERBOSE" ]
+    then
+        echo "$1"
+    fi
+}
+
+while getopts "hvn:p:" opts
+do
+    case $opts in
+        h)
+            usage
+            exit 0
+            ;;
+        p)
+            override_path=$OPTARG
+            ;;
+        n)
+            repo_name=$OPTARG
+            ;;
+        v)
+            VERBOSE=1
+            ;;
+        ?)
+            usage
+            exit 0
+            ;;
+    esac
+done
+
+# Override path?
+if [ -z $override_path ];
+then
+    svn_path=$default_svn_path;
+else 
+    if [ -d $override_path ];
+    then
+        svn_path=$override_path
+    else
+        echo "Sorry but your SVN path: $svn_path does not exsit"
+        exit 1
+    fi
+fi
+
+# Check new repo name is passed
+if [ -z $repo_name ];
+then
+    echo 'Please insert repository name'
+    exit 1
+fi
+
+new_svn_repo="$svn_path/$repo_name"
+
+tell "$new_svn_repo"
+
+# Check if new repo does not already exist
+if [ -d $new_svn_repo ]
+then
+    echo "Sorry but your new repository ($svn_new_repo) already exist!"
+    exit 1
+fi
+
+tell "Creating new repo: $new_svn_repo"
+svnadmin create $new_svn_repo
+
+if [ -d $new_svn_repo ]
+then
+    tell "New $new_svn_repo has been created."
+
+    tell "Setting perm to $svn_owner:$svn_group"
+    chown -R "$svn_owner":"$svn_group" "$new_svn_repo"
+    tell "New repository created!"
+fi
+exit 0;
