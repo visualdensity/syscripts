@@ -68,16 +68,14 @@ then
     exit 1
 fi
 
-if [ -f "$nginx_enabled/$1" ]
+if [ -L "$nginx_enabled/$1" ]
 then
-    echo "The vhost is already enabled"
-    exit 0
-fi
-
-if [ -f "$nginx_avail/$1" ]
-then
-    echo "Enabling $1..."
-    ln -s "$nginx_avail/$1" "$nginx_enabled/$1"
+    echo "Disabling $1..."
+    rm "$nginx_enabled/$1"
     echo "done"
+
+    exit 0
+else
+    echo "$1 is not enabled. No action taken."
     exit 0
 fi
