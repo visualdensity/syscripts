@@ -14,6 +14,8 @@
 # ===================================================
 
 unset FORCE
+unset override_source
+unset override_target
 
 # I can haz cheezburga?
 if [[ $EUID -ne 0 ]]; 
@@ -33,8 +35,8 @@ servers[2]="10.1.1.6"
 # Other configs - paths, users, options, etc
 user=www-data
 exclude_file=/home/user/rsync_exclude
-source_path=/var/www/vhosts/example.local/source/
-target_path=/var/www/vhosts/example.com/
+default_source=/var/www/vhosts/example.local/source/
+default_target=/var/www/vhosts/example.com/
 rsync_opts='-rCcvzog'
 
 # Functions 
@@ -50,15 +52,38 @@ function sync_code() {
 } #sync_code
 
 # Opts
-while getopts "f" opts
+while getopts "fs:t:" opts
 do
     case $opts in
+        s)
+            override_source=$OPTARG
+            ;;
+        t)
+            override_target=$OPTARG
+            ;;
         f)  
             FORCE=1
             ;;  
     esac
 done
 
+# Override source
+if [ -n "$override_source" ]
+then
+    source_path="$override_source"
+else
+    source_path="$default_source"
+fi
+
+# Override target
+if [ -n "$override_target" ]
+then
+    target_path="$override_target"
+else
+    target_path="$default_target"
+fi
+
+# Dry run or actual sync?
 if [ -n "$FORCE" ]
 then
     echo "WARNING: You are about to sync these codes to the PRODUCTION cluster."
