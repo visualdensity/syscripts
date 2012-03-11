@@ -7,8 +7,12 @@
 #  to be executed from the gold server via rsync
 #
 #  @author  Wee Keat <weekeat@catchoftheday.com.au>
+#  @where   https://github.com/visualdensity/syscripts
 #  @since   8 Mar 2012
-#  @TODO    + exclude servers: -e 10.10.3.4,10.10.3.5
+#  @TODO    + exclude servers        : -e 10.10.3.4,10.10.3.5
+#           + specific servers       : -s 10.10.3.8,10.10.3.12
+#           + override user          : -u www
+#           + override rsync options : -o rCcvz
 # ===================================================
 
 unset FORCE
