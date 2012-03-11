@@ -1,0 +1,99 @@
+#! /bin/bash
+
+# ===================================================
+#  Deployment script
+#
+#  Very simple deployment script that is meant
+#  to be executed from the gold server via rsync
+#
+#  @author  Wee Keat <weekeat@catchoftheday.com.au>
+#  @since   8 Mar 2012
+#  @TODO    + exclude servers: -e 10.10.3.4,10.10.3.5
+#           + override source: -s /path/to/source
+#           + override target: -s /path/to/target
+# ===================================================
+
+unset FORCE
+
+# I can haz cheezburga?
+if [[ $EUID -ne 0 ]]; 
+then
+    echo "Sorry I only run if you're root!"
+    exit 1;
+fi
+
+# Servers - please add/remove servers here
+servers[0]="10.1.1.1"
+servers[0]="10.1.1.2"
+servers[0]="10.1.1.3"
+servers[0]="10.1.1.4"
+servers[1]="10.1.1.5"
+servers[2]="10.1.1.6"
+
+# Other configs - paths, users, options, etc
+user=www-data
+exclude_file=/home/user/rsync_exclude
+source_path=/var/www/vhosts/example.local/source/
+target_path=/var/www/vhosts/example.com/
+rsync_opts='-rCcvzog'
+
+# Functions 
+function sync_code() {
+    for server in "${servers[@]}" 
+    do
+        echo ""
+        echo "Server: $server"
+        rsync -e "ssh -p 774" "$rsync_options" --delete --exclude-from="$exclude_file" "$source_path" "$user"@"$server":"$target_path"
+        echo ""
+        echo "---"
+    done
+} #sync_code
+
+# Opts
+while getopts "f" opts
+do
+    case $opts in
+        f)  
+            FORCE=1
+            ;;  
+    esac
+done
+
+if [ -n "$FORCE" ]
+then
+    echo "WARNING: You are about to sync these codes to the PRODUCTION cluster."
+    echo "Are you sure you would like to proceed? [y/n]" 
+    read yn
+
+    case "$yn" in
+        [yY]) break 
+              ;;
+        [nN]) echo "Sync cancelled."
+              exit 
+              ;;
+           *) echo "Please answer 'y' or 'n' only next time."
+              echo "Sync cancelled."
+              exit 
+              ;;
+    esac
+
+    echo "================================"
+    echo "  COMMITING CHANGES TO NODES"
+    echo "================================"
+    echo ""
+
+    rsync_options="$rsync_opts"
+    sync_code
+else
+    echo "==============================================="
+    echo "  DRY-RUN ONLY "
+    echo "  Please use -f to force commit to all nodes"
+    echo "==============================================="
+    echo ""
+
+    rsync_options="$rsync_opts"n
+    sync_code
+fi
+
+# Play nice
+exit
