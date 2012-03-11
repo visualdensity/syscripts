@@ -9,8 +9,6 @@
 #  @author  Wee Keat <weekeat@catchoftheday.com.au>
 #  @since   8 Mar 2012
 #  @TODO    + exclude servers: -e 10.10.3.4,10.10.3.5
-#           + override source: -s /path/to/source
-#           + override target: -s /path/to/target
 # ===================================================
 
 unset FORCE
