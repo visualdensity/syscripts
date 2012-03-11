@@ -28,17 +28,16 @@ fi
 
 # Servers - please add/remove servers here
 servers[0]="10.1.1.1"
-servers[0]="10.1.1.2"
-servers[0]="10.1.1.3"
-servers[0]="10.1.1.4"
-servers[1]="10.1.1.5"
-servers[2]="10.1.1.6"
+servers[1]="10.1.1.2"
+servers[2]="10.1.1.3"
+servers[3]="10.1.1.4"
+servers[4]="10.1.1.5"
 
 # Other configs - paths, users, options, etc
 user=www-data
 exclude_file=/home/user/rsync_exclude
-default_source=/var/www/vhosts/example.local/source/
-default_target=/var/www/vhosts/example.com/
+source_path=/var/www/vhosts/example.local/source/
+target_path=/var/www/vhosts/example.com/
 rsync_opts='-rCcvzog'
 
 # Functions 
@@ -58,32 +57,16 @@ while getopts "fs:t:" opts
 do
     case $opts in
         s)
-            override_source=$OPTARG
+            source_path=$OPTARG #override source
             ;;
         t)
-            override_target=$OPTARG
+            target_path=$OPTARG #override target
             ;;
         f)  
             FORCE=1
             ;;  
     esac
 done
-
-# Override source
-if [ -n "$override_source" ]
-then
-    source_path="$override_source"
-else
-    source_path="$default_source"
-fi
-
-# Override target
-if [ -n "$override_target" ]
-then
-    target_path="$override_target"
-else
-    target_path="$default_target"
-fi
 
 # Dry run or actual sync?
 if [ -n "$FORCE" ]
@@ -93,34 +76,39 @@ then
     read yn
 
     case "$yn" in
-        [yY]) break 
+        [yY]) # Do nothing - proceed
               ;;
         [nN]) echo "Sync cancelled."
-              exit 
+              exit 0
               ;;
            *) echo "Please answer 'y' or 'n' only next time."
               echo "Sync cancelled."
-              exit 
+              exit 1
               ;;
     esac
 
-    echo "================================"
-    echo "  COMMITING CHANGES TO NODES"
-    echo "================================"
-    echo ""
+    echo "=================================================="
+    echo " COMMITING CHANGES TO NODES"
+    echo
+    echo " Source: $source_path"
+    echo " Target: $target_path"
+    echo "=================================================="
 
     rsync_options="$rsync_opts"
     sync_code
 else
-    echo "==============================================="
-    echo "  DRY-RUN ONLY "
-    echo "  Please use -f to force commit to all nodes"
-    echo "==============================================="
-    echo ""
+    echo "=================================================="
+    echo " DRY-RUN ONLY "
+    echo
+    echo " Source: $source_path"
+    echo " Target: $target_path"
+    echo " Please use -f to force commit to all nodes"
+    echo
+    echo "=================================================="
 
     rsync_options="$rsync_opts"n
     sync_code
 fi
 
 # Play nice
-exit
+exit 0
