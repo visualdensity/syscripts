@@ -9,6 +9,7 @@ read number
 echo "PID: $pid"
 for i in $(seq 1 $number)
 do
+    echo "https://www.mumgo.com.au/images/prods/$pid/${pid}_event_hd.jpg"
     echo "https://www.mumgo.com.au/images/prods/$pid/${pid}_${i}.jpg"
     echo "https://www.mumgo.com.au/images/prods/$pid/${pid}_${i}_list.jpg"
     echo "https://www.mumgo.com.au/images/prods/$pid/${pid}_${i}_hd.jpg"
